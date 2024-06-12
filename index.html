@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="js/bootstrap.min.js"></script>
+    <title>Voltway</title>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #a6490c">
+      <div class="container-fluid container">
+          <a class="navbar-brand" href="#"><img src="img/fav-icon-white.png" width="50" height="50" alt="" srcset="" /><span class="bold">V O L T W A Y</span></a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="about.html">About Us</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="contact.html">Contact Us</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link " href="signup.html"><div class="btn btn-light">Sign Up</div></a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link " href="signin.html"><div class="btn btn-outline-light">Sign In</div></a>
+              </li>
+            </ul>
+          </div>
+      </div>
+    </nav>
+    <div class="" style="height: calc(100% - 56px);">
+      <div id="sidebar" class="bg-light p-4" style="width: 250px; position: absolute; z-index: 10;">
+        <img src="img/fav-icon.png" width="70" height="70" alt="" srcset="" class="img img-fluid me-auto ms-auto d-block" />
+        <h4>Filtres</h4>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="gas_station" id="station-gaz" />
+          <label class="form-check-label" for="station-gaz">Stations de gaz</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="charging_station" id="station-electrique" />
+          <label class="form-check-label" for="station-electrique">Stations électriques</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="car_repair" id="mecanique" />
+          <label class="form-check-label" for="mecanique">Service mécanique</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="store" id="point-vente" />
+          <label class="form-check-label" for="point-vente">Points de vente</label>
+        </div>
+        <button class="btn btn-primary mt-3" onclick="addLocation()">Ajouter une localisation</button>
+      </div>
+      <div id="map" class="flex-grow-1" style="position: relative"></div>
+    </div>
+    <script>
+      let map;
+      let infowindow;
+      let service;
+      let markers = []; // Array to store markers
+    
+      function initMap() {
+        navigator.geolocation.getCurrentPosition(function (position) {
+          const pos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+    
+          map = new google.maps.Map(document.getElementById("map"), {
+            center: pos,
+            zoom: 14,
+          });
+    
+          infowindow = new google.maps.InfoWindow();
+          service = new google.maps.places.PlacesService(map);
+    
+          updatePlaces(); // Search for all place types on initial load
+        });
+      }
+    
+      function updatePlaces() {
+        const boxes = document.querySelectorAll('input[type="checkbox"]:checked');
+        clearMarkers(); // Clear existing markers
+    
+        boxes.forEach((box) => {
+          const request = {
+            location: map.getCenter(),
+            radius: "5000",
+            type: [box.value],
+          };
+    
+          service.nearbySearch(request, function (results, status) {
+            if (status === google.maps.places.PlacesServiceStatus.OK) {
+              results.forEach(createMarker);
+            }
+          });
+        });
+      }
+    
+      function createMarker(place) {
+        const marker = new google.maps.Marker({
+          map: map,
+          position: place.geometry.location,
+        });
+    
+        markers.push(marker); // Store the marker
+    
+        google.maps.event.addListener(marker, "click", function () {
+          infowindow.setContent(place.name);
+          infowindow.open(map, this);
+        });
+      }
+    
+      function clearMarkers() {
+        for (let marker of markers) {
+          marker.setMap(null);
+        }
+        markers = []; // Reset the marker array
+      }
+    
+      function addLocation() {
+        if (!isAuthenticated()) {
+          window.location.href = 'signin.html'; // Redirect to sign in if not authenticated
+          return;
+        }
+    
+        // If authenticated, let user choose location on map
+        google.maps.event.addListenerOnce(map, 'click', function(event) {
+          placeMarker(event.latLng, map);
+        });
+      }
+    
+      function placeMarker(location, map) {
+        const marker = new google.maps.Marker({
+          position: location,
+          map: map
+        });
+        map.panTo(location);
+    
+        // Assuming saveLocation() would send the location to your server
+        saveLocation(location.lat(), location.lng());
+      }
+    
+      function saveLocation(lat, lng) {
+        // Placeholder for saving the location to the database
+        console.log("Location saved:", lat, lng);
+      }
+    
+      function isAuthenticated() {
+        // Placeholder function to check if the user is authenticated
+        // Replace this with actual authentication check logic
+        return localStorage.getItem('userLoggedIn') === 'true';
+      }
+    
+      document.querySelectorAll(".form-check-input").forEach((input) => {
+        input.addEventListener("change", updatePlaces); // Update places when any checkbox changes
+      });
+    </script>
+    
+    
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initMap"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDveHsMkraRmza124qxTK0s0HDls3klYrw&libraries=places&callback=initMap" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
