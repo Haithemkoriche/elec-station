@@ -52,6 +52,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <title>Edit Location</title>
+    <style>
+    #map {
+        height: 300px;
+        /* Set the height of the map */
+        width: 100%;
+        /* Optional: you can set the width as well */
+    }
+    </style>
 </head>
 
 <body>
@@ -62,6 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
                 <label for="name">Name:</label>
                 <input type="text" class="form-control" id="name" name="name"
                     value="<?php echo htmlspecialchars($location['name']); ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="map">Map (Drag marker to set coordinates):</label>
+                <div id="map"></div> <!-- Map will display here -->
             </div>
             <div class="form-group">
                 <label for="latitude">Latitude:</label>
@@ -77,6 +89,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
         </form>
     </div>
 
+    <script>
+    function initMap() {
+        const currentPos = {
+            lat: parseFloat(document.getElementById('latitude').value),
+            lng: parseFloat(document.getElementById('longitude').value)
+        };
+
+        const map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 12,
+            center: currentPos
+        });
+
+        const marker = new google.maps.Marker({
+            position: currentPos,
+            map: map,
+            draggable: true
+        });
+
+        google.maps.event.addListener(marker, 'dragend', function() {
+            document.getElementById('latitude').value = marker.getPosition().lat();
+            document.getElementById('longitude').value = marker.getPosition().lng();
+        });
+
+        map.addListener('click', function(e) {
+            marker.setPosition(e.latLng);
+            document.getElementById('latitude').value = e.latLng.lat();
+            document.getElementById('longitude').value = e.latLng.lng();
+        });
+    }
+    </script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDveHsMkraRmza124qxTK0s0HDls3klYrw&callback=initMap">
+    </script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

@@ -84,6 +84,14 @@ if (isset($_GET['delete'])) {
     <link rel="stylesheet" href="../css/bootstrap.min.css" />
     <link rel="stylesheet" href="../style.css" />
     <script src="../js/bootstrap.min.js"></script>
+    <style>
+    #map {
+        width: 100%;
+        height: 300px;
+        /* Adjust size as necessary */
+        margin-top: 15px;
+    }
+    </style>
     <title>Admin Dashboard</title>
 </head>
 
@@ -123,6 +131,10 @@ if (isset($_GET['delete'])) {
                     <div class="form-group">
                         <label for="name">Name:</label>
                         <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="map">Select Location:</label>
+                        <div id="map"></div> <!-- Map will display here -->
                     </div>
                     <div class="form-group">
                         <label for="latitude">Latitude:</label>
@@ -179,6 +191,39 @@ if (isset($_GET['delete'])) {
             </div>
         </div>
     </div>
+    <script>
+    function initMap() {
+        const algiers = {
+            lat: 36.7525,
+            lng: 3.04197
+        }; // Coordinates for Algiers
+
+        const map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 12,
+            center: algiers
+        });
+
+        const marker = new google.maps.Marker({
+            position: algiers,
+            map: map,
+            draggable: true
+        });
+
+        google.maps.event.addListener(marker, 'dragend', function() {
+            document.getElementById('latitude').value = marker.getPosition().lat();
+            document.getElementById('longitude').value = marker.getPosition().lng();
+        });
+
+        map.addListener('click', function(e) {
+            marker.setPosition(e.latLng);
+            document.getElementById('latitude').value = e.latLng.lat();
+            document.getElementById('longitude').value = e.latLng.lng();
+        });
+    }
+    </script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDveHsMkraRmza124qxTK0s0HDls3klYrw&callback=initMap">
+    </script>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
